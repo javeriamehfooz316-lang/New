@@ -58,7 +58,7 @@ export default function Home() {
         <button onClick={senddata} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition-all duration-300">Submit</button>
       </div>
       <p className="mt-4 text-lg">This is the home page.</p>
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3720159892554941"
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3720159892554941"
      crossorigin="anonymous"></script>
     </div>
 
