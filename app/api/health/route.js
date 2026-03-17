@@ -5,6 +5,30 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
+function getSafeUriInfo() {
+  try {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+      return { hasUri: false };
+    }
+
+    const parsed = new URL(uri);
+    const host = parsed.host;
+    const dbName = parsed.pathname?.replace(/^\//, "") || "(default)";
+
+    return {
+      hasUri: true,
+      host,
+      dbName,
+    };
+  } catch {
+    return {
+      hasUri: true,
+      malformedUri: true,
+    };
+  }
+}
+
 function classifyHealthError(error) {
   const lowerMessage = error?.message?.toLowerCase?.() || "";
 
@@ -37,6 +61,8 @@ function classifyHealthError(error) {
 }
 
 export async function GET() {
+  const uriInfo = getSafeUriInfo();
+
   try {
     const client = await getMongoClient();
     const db = client.db("TestDB");
@@ -45,12 +71,14 @@ export async function GET() {
     return NextResponse.json({
       ok: true,
       message: "Database connection is healthy.",
+      uriInfo,
     });
   } catch (error) {
     return NextResponse.json(
       {
         ok: false,
         message: classifyHealthError(error),
+        uriInfo,
       },
       { status: 500 }
     );
