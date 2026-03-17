@@ -1,5 +1,9 @@
-import clientPromise from "@/lib/mongodb";
+import getMongoClient from "@/lib/mongodb";
 import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const maxDuration = 30;
 
 export async function POST(request) {
     try {
@@ -18,7 +22,7 @@ export async function POST(request) {
             );
         }
 
-        const client = await clientPromise;
+        const client = await getMongoClient();
         const db = client.db("TestDB");
         const collection = db.collection("TestCollection");
 
@@ -35,10 +39,20 @@ export async function POST(request) {
             data,
         });
     } catch (error) {
+        const lowerMessage = error?.message?.toLowerCase?.() || "";
+        const isMongoConnectionIssue =
+            lowerMessage.includes("server selection timed out") ||
+            lowerMessage.includes("econnrefused") ||
+            lowerMessage.includes("etimedout") ||
+            lowerMessage.includes("authentication failed") ||
+            lowerMessage.includes("bad auth");
+
         return NextResponse.json(
             {
                 success: false,
-                error: error.message,
+                error: isMongoConnectionIssue
+                    ? "Database connection failed. Verify MONGODB_URI in Netlify and allow your deployment network access in MongoDB Atlas."
+                    : error.message,
             },
             { status: 500 }
         );
