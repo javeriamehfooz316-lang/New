@@ -4,29 +4,51 @@ export default function Home() {
   const [collectionName, setCollectionName] = useState('')
   const [collectionImg, setCollectionImg] = useState('')
   const [description, setDescription] = useState('')
+  const [status, setStatus] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   
-   const senddata = async () => {
-  const res = await fetch("/api/senddata", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      collectionName,
-      collectionImg,
-      description,
-    }),
-  });
+  const senddata = async () => {
+    const payload = {
+      collectionName: collectionName.trim(),
+      collectionImg: collectionImg.trim(),
+      description: description.trim(),
+    }
 
-  const data = await res.json();
-  if (data.success) {
-    setCollectionImg('')
-    setCollectionName('')
-    setDescription('')
+    if (!payload.collectionName || !payload.collectionImg || !payload.description) {
+      setStatus('Please fill all fields before submitting.')
+      return
+    }
+
+    setIsSubmitting(true)
+    setStatus('')
+
+    try {
+      const res = await fetch('/api/senddata', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok || !data.success) {
+        setStatus(data.error || 'Failed to save data.')
+        return
+      }
+
+      setCollectionImg('')
+      setCollectionName('')
+      setDescription('')
+      setStatus('Saved successfully.')
+    } catch {
+      setStatus('Network error. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-  console.log(data);
-};
 
 
 
@@ -37,29 +59,34 @@ export default function Home() {
         <input
           type="text"
           placeholder="Enter Collection Name"
-          className="border p-1 outline-none px-4  w-100 rounded"
+          className="border p-1 outline-none px-4 w-full rounded"
           value={collectionName}
           onChange={(e) => setCollectionName(e.target.value)}
         />
         <input
           type="text"
           placeholder="Enter Collection IMG"
-          className="border p-1 outline-none px-4  w-100 rounded"
+          className="border p-1 outline-none px-4 w-full rounded"
           value={collectionImg}
           onChange={(e) => setCollectionImg(e.target.value)}
         />
         <input
           type="text"
           placeholder="Enter Description"
-          className="border p-1 outline-none px-4  w-100 rounded"
+          className="border p-1 outline-none px-4 w-full rounded"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
-        <button onClick={senddata} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition-all duration-300">Submit</button>
+        <button
+          onClick={senddata}
+          disabled={isSubmitting}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 transition-all duration-300 disabled:opacity-60"
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit'}
+        </button>
       </div>
+      {status && <p className="mt-4 text-sm">{status}</p>}
       <p className="mt-4 text-lg">This is the home page.</p>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3720159892554941"
-     crossorigin="anonymous"></script>
     </div>
 
   );
