@@ -1,5 +1,21 @@
 'use client'
 import { useState } from 'react'
+
+function getUserSafeMessage(message) {
+  const normalized = (message || '').toLowerCase()
+
+  if (
+    normalized.includes('ssl') ||
+    normalized.includes('tls') ||
+    normalized.includes('certificate') ||
+    normalized.includes('handshake')
+  ) {
+    return 'Database connection failed. Check deployment environment variables and MongoDB Atlas access settings.'
+  }
+
+  return message || 'Failed to save data.'
+}
+
 export default function Home() {
   const [collectionName, setCollectionName] = useState('')
   const [collectionImg, setCollectionImg] = useState('')
@@ -35,7 +51,7 @@ export default function Home() {
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        setStatus(data.error || 'Failed to save data.')
+        setStatus(getUserSafeMessage(data.error))
         return
       }
 
